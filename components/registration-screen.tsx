@@ -1,0 +1,309 @@
+"use client"
+
+import type React from "react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Eye, EyeOff, Sparkles, Shield, ChevronRight } from "lucide-react"
+import { dataStore } from "@/lib/data-store"
+
+interface RegistrationScreenProps {
+  onRegister: () => void
+  onBackToLogin: () => void
+}
+
+export function RegistrationScreen({ onRegister, onBackToLogin }: RegistrationScreenProps) {
+  const [step, setStep] = useState<"email" | "details" | "pin">("email")
+  const [formData, setFormData] = useState({
+    email: "",
+    fullName: "",
+    accountNumber: "",
+    phone: "",
+    pin: "",
+    confirmPin: "",
+  })
+  const [showPin, setShowPin] = useState(false)
+  const [showConfirmPin, setShowConfirmPin] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleEmailSubmit = () => {
+    setError("")
+    if (!formData.email.trim()) {
+      setError("Email is required")
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError("Please enter a valid email")
+      return
+    }
+    setStep("details")
+  }
+
+  const handleDetailsSubmit = () => {
+    setError("")
+    if (!formData.fullName.trim()) {
+      setError("Full name is required")
+      return
+    }
+    if (!formData.accountNumber.trim() || formData.accountNumber.length < 10) {
+      setError("Account number must be at least 10 digits")
+      return
+    }
+    if (!formData.phone.trim()) {
+      setError("Phone number is required")
+      return
+    }
+    setStep("pin")
+  }
+
+  const handleRegister = () => {
+    setError("")
+    if (formData.pin.length !== 4 || !/^\d+$/.test(formData.pin)) {
+      setError("PIN must be exactly 4 digits")
+      return
+    }
+    if (formData.pin !== formData.confirmPin) {
+      setError("PINs do not match")
+      return
+    }
+
+    setIsLoading(true)
+    setTimeout(() => {
+      dataStore.registerNewAccount({
+        name: formData.fullName,
+        accountNumber: formData.accountNumber,
+        email: formData.email,
+        phone: formData.phone,
+        pin: formData.pin,
+      })
+      setIsLoading(false)
+      onRegister()
+    }, 2000)
+  }
+
+  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>, field: "pin" | "confirmPin") => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 4)
+    setFormData({ ...formData, [field]: value })
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+    setError("")
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#004A9F] via-[#0072C6] to-[#00B2A9] flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      <div className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute bottom-32 right-8 w-24 h-24 bg-white/5 rounded-full blur-lg animate-bounce"></div>
+
+      <div className="w-full max-w-sm relative z-10">
+        <div className="text-center mb-12">
+          <div className="relative inline-block">
+            <div className="text-white text-4xl font-bold mb-3 bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
+              Ecobank
+            </div>
+            <div className="absolute -top-2 -right-2">
+              <Sparkles className="h-6 w-6 text-yellow-300 animate-pulse" />
+            </div>
+          </div>
+          <div className="text-white/90 text-base font-medium mb-2">The Pan African Bank</div>
+          <div className="text-white/70 text-sm flex items-center justify-center gap-2">
+            <Shield className="h-4 w-4" />
+            Create Your Account
+          </div>
+        </div>
+
+        <Card className="bg-white/95 backdrop-blur-xl shadow-2xl border-0 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
+          <CardContent className="p-8 space-y-6 relative">
+            <div className="flex gap-2 mb-6">
+              {["email", "details", "pin"].map((s) => (
+                <div
+                  key={s}
+                  className={`flex-1 h-1 rounded-full transition-colors ${
+                    (step === "email" && s === "email") ||
+                    (step === "details" && (s === "email" || s === "details")) ||
+                    (step === "pin" && ["email", "details", "pin"].includes(s))
+                      ? "bg-[#004A9F]"
+                      : "bg-gray-300"
+                  }`}
+                ></div>
+              ))}
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
+            )}
+
+            {step === "email" && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-800">Create Account</h2>
+                <p className="text-gray-600 text-sm">Step 1 of 3: Email Address</p>
+                <Input
+                  type="email"
+                  name="email"
+                  placeholder="Enter email address"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full h-12 rounded-xl border-2 border-gray-200 focus:border-[#004A9F] focus:ring-0 bg-white/80 backdrop-blur-sm transition-all duration-200"
+                />
+                <Button
+                  onClick={handleEmailSubmit}
+                  className="w-full h-12 bg-gradient-to-r from-[#A4D233] to-[#8BC220] hover:from-[#8BC220] hover:to-[#7AB01F] text-black font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                >
+                  Continue
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            )}
+
+            {step === "details" && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-800">Create Account</h2>
+                <p className="text-gray-600 text-sm">Step 2 of 3: Account Details</p>
+                <Input
+                  type="text"
+                  name="fullName"
+                  placeholder="Enter full name"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  className="w-full h-12 rounded-xl border-2 border-gray-200 focus:border-[#004A9F] focus:ring-0 bg-white/80 backdrop-blur-sm transition-all duration-200"
+                />
+                <Input
+                  type="text"
+                  name="accountNumber"
+                  placeholder="Enter account number (10+ digits)"
+                  value={formData.accountNumber}
+                  onChange={handleInputChange}
+                  className="w-full h-12 rounded-xl border-2 border-gray-200 focus:border-[#004A9F] focus:ring-0 bg-white/80 backdrop-blur-sm transition-all duration-200"
+                />
+                <Input
+                  type="tel"
+                  name="phone"
+                  placeholder="Enter phone number"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className="w-full h-12 rounded-xl border-2 border-gray-200 focus:border-[#004A9F] focus:ring-0 bg-white/80 backdrop-blur-sm transition-all duration-200"
+                />
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    onClick={() => setStep("email")}
+                    variant="outline"
+                    className="flex-1 h-12 rounded-xl border-2 border-gray-200 hover:border-gray-300"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleDetailsSubmit}
+                    className="flex-1 h-12 bg-gradient-to-r from-[#A4D233] to-[#8BC220] hover:from-[#8BC220] hover:to-[#7AB01F] text-black font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                  >
+                    Continue
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {step === "pin" && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-800">Create Account</h2>
+                <p className="text-gray-600 text-sm">Step 3 of 3: Set Your PIN</p>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 block">Create 4-Digit PIN</label>
+                  <div className="relative">
+                    <Input
+                      type={showPin ? "text" : "password"}
+                      placeholder="Enter PIN"
+                      value={formData.pin}
+                      onChange={(e) => handlePinChange(e, "pin")}
+                      maxLength={4}
+                      className="w-full h-12 rounded-xl border-2 border-gray-200 focus:border-[#004A9F] focus:ring-0 bg-white/80 backdrop-blur-sm transition-all duration-200 pr-12"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-500 hover:text-gray-700"
+                      onClick={() => setShowPin(!showPin)}
+                    >
+                      {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 block">Confirm PIN</label>
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPin ? "text" : "password"}
+                      placeholder="Confirm PIN"
+                      value={formData.confirmPin}
+                      onChange={(e) => handlePinChange(e, "confirmPin")}
+                      maxLength={4}
+                      className="w-full h-12 rounded-xl border-2 border-gray-200 focus:border-[#004A9F] focus:ring-0 bg-white/80 backdrop-blur-sm transition-all duration-200 pr-12"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-500 hover:text-gray-700"
+                      onClick={() => setShowConfirmPin(!showConfirmPin)}
+                    >
+                      {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    onClick={() => setStep("details")}
+                    variant="outline"
+                    className="flex-1 h-12 rounded-xl border-2 border-gray-200 hover:border-gray-300"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleRegister}
+                    disabled={isLoading}
+                    className="flex-1 h-12 bg-gradient-to-r from-[#A4D233] to-[#8BC220] hover:from-[#8BC220] hover:to-[#7AB01F] text-black font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                        Creating...
+                      </div>
+                    ) : (
+                      "Create Account"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="text-center pt-4 border-t border-gray-200">
+              <p className="text-gray-600 text-sm">
+                Already have an account?{" "}
+                <Button
+                  variant="link"
+                  onClick={onBackToLogin}
+                  className="text-[#004A9F] text-sm p-0 font-semibold hover:text-[#003875]"
+                >
+                  Sign In
+                </Button>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="text-center mt-8 text-white/70 text-xs space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <Shield className="h-3 w-3" />
+            <span>Secured by 256-bit SSL encryption</span>
+          </div>
+          <div>© 2025 Ecobank. All rights reserved.</div>
+        </div>
+      </div>
+    </div>
+  )
+}

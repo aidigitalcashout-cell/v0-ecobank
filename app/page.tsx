@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SplashScreen } from "@/components/splash-screen"
 import { LoginScreen } from "@/components/login-screen"
 import { EnhancedDashboard } from "@/components/enhanced-dashboard"
@@ -29,11 +29,20 @@ import { TransferProcessingScreen } from "@/components/transfer-processing-scree
 import { DetailedReceiptScreen } from "@/components/detailed-receipt-screen"
 import { UpgradeLimitScreen } from "@/components/upgrade-limit-screen"
 import { Toaster } from "@/components/ui/toaster"
+import { dataStore } from "@/lib/data-store"
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState("splash")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [transferData, setTransferData] = useState<any>(null)
+
+  useEffect(() => {
+    const hasAccount = dataStore.hasExistingAccount()
+    if (!hasAccount) {
+      // If no account, will show registration through login screen
+      setCurrentScreen("login")
+    }
+  }, [])
 
   const handleNavigate = (screen: string, data?: any) => {
     setCurrentScreen(screen)

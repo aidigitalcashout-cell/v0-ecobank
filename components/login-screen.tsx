@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { RegistrationScreen } from "./registration-screen"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [showPin, setShowPin] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [showRegistration, setShowRegistration] = useState(false)
 
   const handleLogin = () => {
     setError("")
@@ -50,6 +52,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 4)
     setCredentials({ ...credentials, pin: value })
+  }
+
+  if (showRegistration) {
+    return <RegistrationScreen onRegister={onLogin} onBackToLogin={() => setShowRegistration(false)} />
   }
 
   return (
@@ -154,6 +160,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 Don't have an account?{" "}
                 <Button
                   variant="link"
+                  onClick={() => setShowRegistration(true)}
                   className="text-[#004A9F] text-xs p-0 font-semibold hover:text-[#003875] transition-colors"
                 >
                   Register

@@ -425,6 +425,36 @@ class DataStore {
       return false
     }
   }
+
+  // New account registration method
+  registerNewAccount(accountData: {
+    name: string
+    accountNumber: string
+    email: string
+    phone: string
+    pin: string
+  }): void {
+    this.state.userData = {
+      name: accountData.name,
+      accountNumber: accountData.accountNumber,
+      phone: accountData.phone,
+      balance: 0,
+      email: accountData.email,
+      address: "",
+      bvn: "",
+      status: "Active",
+      profilePicture: undefined,
+    }
+    // PIN is handled by the login screen, not stored here for security
+    this.state.transactions = []
+    this.state.beneficiaries = []
+    this.notify()
+  }
+
+  // Method to check if account exists
+  hasExistingAccount(): boolean {
+    return this.state.userData.accountNumber !== ""
+  }
 }
 
 export const dataStore = DataStore.getInstance()
