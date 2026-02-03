@@ -32,6 +32,7 @@ import { UpgradeLimitScreen } from "@/components/upgrade-limit-screen"
 import { Toaster } from "@/components/ui/toaster"
 import { dataStore } from "@/lib/data-store"
 import { LoanRequirementsChecklist } from "@/components/loan-requirements-checklist"
+import { BusinessLoanApplication } from "@/components/business-loan-application"
 
 export default function Home() {
   useStorageInit()
@@ -119,6 +120,8 @@ export default function Home() {
         return <DetailedReceiptScreen onBack={handleBack} transactionId={transferData} />
       case "upgrade-limit":
         return <UpgradeLimitScreen onBack={handleBack} onNavigate={handleNavigate} />
+      case "business-loan-application":
+        return <BusinessLoanApplication />
       default:
         return <EnhancedDashboard onNavigate={handleNavigate} onMenuToggle={handleMenuToggle} />
     }
